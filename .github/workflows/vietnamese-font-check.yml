@@ -4,7 +4,6 @@ on:
   pull_request:
     paths:
       - "build.py"
-      - "vietnamese.py"
       - "tests/test_vietnamese.py"
       - "tests/audit_vietnamese.py"
       - ".github/workflows/vietnamese-font-check.yml"
@@ -12,7 +11,6 @@ on:
     branches: [main]
     paths:
       - "build.py"
-      - "vietnamese.py"
       - "tests/test_vietnamese.py"
       - "tests/audit_vietnamese.py"
   workflow_dispatch:
