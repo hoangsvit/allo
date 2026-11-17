@@ -1,0 +1,73 @@
+name: Vietnamese font support
+
+on:
+  pull_request:
+    paths:
+      - "build.py"
+      - "vietnamese.py"
+      - "tests/test_vietnamese.py"
+      - ".github/workflows/vietnamese-font-check.yml"
+  push:
+    branches: [main]
+    paths:
+      - "build.py"
+      - "vietnamese.py"
+      - "tests/test_vietnamese.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  coverage-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install pinned build dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Validate Unicode mapping and accent bounds in UFOs
+        run: python -m unittest discover -s tests -p 'test_vietnamese.py' -v
+
+      - name: Compile variable and static fonts
+        run: python build.py
+
+      - name: Inspect compiled font cmaps
+        run: |
+          python - <<'PY'
+          from fontTools.ttLib import TTFont
+          from vietnamese import VIETNAMESE_CODEPOINTS
+
+          for path in (
+              "fonts/variable/AlloVariable.ttf",
+              "fonts/webfonts/AlloVariable.woff2",
+              "fonts/webfonts/AlloVariableFriendly.woff2",
+              "fonts/otf/Allo-Regular.otf",
+              "fonts/otf/Allo-Oblique.otf",
+          ):
+              font = TTFont(path)
+              missing = set(VIETNAMESE_CODEPOINTS) - set(font.getBestCmap())
+              assert not missing, f"{path} missing: {sorted(hex(cp) for cp in missing)}"
+              print(f"{path}: {len(VIETNAMESE_CODEPOINTS)} Vietnamese code points OK")
+          PY
+
+      - name: Upload font preview for visual QA
+        uses: actions/upload-artifact@v4
+        with:
+          name: allo-vietnamese-preview
+          path: |
+            fonts/variable/AlloVariable.ttf
+            fonts/webfonts/AlloVariable.woff2
+            fonts/webfonts/AlloVariableFriendly.woff2
+            fonts/otf/Allo-Regular.otf
+            fonts/otf/Allo-Oblique.otf
+          if-no-files-found: error
