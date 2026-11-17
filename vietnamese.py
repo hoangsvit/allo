@@ -164,21 +164,25 @@ def extend_vietnamese(font):
             continue
         decomposition = unicodedata.normalize("NFD", chr(codepoint))
         base, modifiers = decomposition[0], decomposition[1:]
-        if not modifiers or modifiers[-1] not in TONE_GLYPHS:
+        shape = next((mark for mark in modifiers if mark in SHAPE_MARKS), None)
+        tone = next((mark for mark in modifiers if mark in TONE_GLYPHS), None)
+        if tone is None or len(modifiers) != (2 if shape else 1):
             raise ValueError(f"Unsupported Vietnamese decomposition: U+{codepoint:04X}")
 
-        stacked = len(modifiers) > 1 and modifiers[0] in SHAPE_MARKS - {"\u031B"}
-        if len(modifiers) == 1:
-            source_name = "idotless" if base == "i" and modifiers[0] != "\u0323" else base
+        # NFD places dot-below before circumflex/breve (combining classes).
+        # Select marks by type, not by their position in the sequence.
+        stacked = shape in {"\u0302", "\u0306"} and tone != "\u0323"
+        if shape is None:
+            source_name = "idotless" if base == "i" and tone != "\u0323" else base
         else:
-            shaped_character = unicodedata.normalize("NFC", base + modifiers[0])
+            shaped_character = unicodedata.normalize("NFC", base + shape)
             try:
                 source_name = mapping[ord(shaped_character)]
             except KeyError as exc:
                 raise ValueError(f"Missing shape base U+{ord(shaped_character):04X}") from exc
 
         added_name = _new_glyph(
-            font, codepoint, source_name, TONE_GLYPHS[modifiers[-1]], stacked
+            font, codepoint, source_name, TONE_GLYPHS[tone], stacked
         )
         mapping[codepoint] = added_name
 
