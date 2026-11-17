@@ -7,6 +7,7 @@ from fontTools.pens.boundsPen import BoundsPen
 import ufoLib2
 
 from vietnamese import VIETNAMESE_CODEPOINTS, extend_vietnamese
+from audit_vietnamese import REQUIRED, missing_in_font
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCES = [
@@ -31,11 +32,24 @@ class VietnameseCoverageTests(unittest.TestCase):
         for source in SOURCES:
             with self.subTest(source=source):
                 font = ufoLib2.Font.open(ROOT / source)
+                # Audit the untouched source first: otherwise generation masks gaps.
                 original = set(font.keys())
+                source_map = cmap(font)
+                missing_in_original = missing_in_font(font)
+                self.assertTrue(
+                    missing_in_original.issubset(VIETNAMESE_CODEPOINTS),
+                    f"Original source lacks unsupported characters: {sorted(missing_in_original - set(VIETNAMESE_CODEPOINTS))}",
+                )
                 self.assertGreater(extend_vietnamese(font), 0)
                 unicode_map = cmap(font)
+                self.assertEqual(
+                    missing_in_original,
+                    set(REQUIRED) & (set(unicode_map) - set(source_map)),
+                    "New Unicode mappings must exactly fill the original Vietnamese gaps",
+                )
+                self.assertFalse(missing_in_font(font), "Vietnamese gaps remain after generation")
 
-                expected = set(VIETNAMESE_CODEPOINTS)
+                expected = set(REQUIRED)
                 expected.update(map(ord, EXAMPLE))
                 expected.discard(0x000A)
                 missing = expected - set(unicode_map)
