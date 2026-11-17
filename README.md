@@ -114,27 +114,6 @@ python3 -m venv .venv
 Writes `fonts/` (variable TTF and WOFF2; 18 static OTFs and WOFF2s, autohinted with AFDKO), `fonts/SHA256SUMS` and
 `Allo-1.0.zip`. Dependencies are pinned and `release.json` fixes the timestamp, so builds are reproducible.
 
-## Vietnamese support (experimental)
-
-The build now includes precomposed Vietnamese characters in **Latin Extended Additional
-(U+1EA0–U+1EF9)**, **Ơ/ơ** and **Ư/ư**, as well as combining hook-above, horn and
-dot-below characters. It covers everyday NFC-encoded Vietnamese such as
-**“Tiếng Việt, Trường học, cộng đồng, dự án, người Việt”**.
-
-The extra glyphs are generated from the editable UFO sources when running
-`python3 build.py`. Previously committed OTF/TTF/WOFF2 binaries do not gain
-these characters until they are rebuilt. Pull requests include a CI-produced
-font preview artifact for visual QA. The hook-above and horn designs are
-**first-pass approximations**, not yet a final type-design review. Decomposed
-Unicode combining-mark placement and stylistic alternates should also be
-visually verified before production use.
-
-To check the Unicode coverage on the source files:
-
-```sh
-python3 -m unittest discover -s tests -p 'test_vietnamese.py' -v
-```
-
 ## Sources
 
 `sources/Allo.designspace` (designspace 5, UFO) has 48 masters: opsz 9, 14, 20, 32 × wght 100, 400, 580, 900 ×
