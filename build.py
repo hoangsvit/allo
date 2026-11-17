@@ -287,7 +287,7 @@ ZIP_README = '''
 
 
   CHARACTERS
-    Latin        A–Z a–z, Vietnamese vowels and accents, ẞ ß Æ æ Œ œ
+    Latin        A–Z a–z, accented forms, ẞ ß Æ æ Œ œ
     Figures      0–9  ⁰¹²³⁴⁵⁶⁷⁸⁹  ₀₁₂₃₄₅₆₇₈₉  ½ ⅓ ¼ ⅔ ¾ ⅛ ⅜ ⅝ ⅞
     Punctuation  ! ? ¡ ¿ … · • † ‡ § ¶ ‘ ’ “ ” « » ‹ › ‐ – — ‒
     Currency     $ ¢ £ ¥ € ₹ ₩ ₽ ₺ ₪ ฿ ₫ ₴ ₦ ₱ ₿ ƒ
