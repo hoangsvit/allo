@@ -6,7 +6,7 @@ import unittest
 from fontTools.pens.boundsPen import BoundsPen
 import ufoLib2
 
-from vietnamese import VIETNAMESE_CODEPOINTS, extend_vietnamese
+from build import VIETNAMESE_CODEPOINTS, extend_vietnamese
 from audit_vietnamese import REQUIRED, missing_in_font
 
 ROOT = Path(__file__).resolve().parents[1]
