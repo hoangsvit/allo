@@ -57,8 +57,15 @@ def _make_marks(font):
     if "dotbelowcomb" not in font:
         dot = font.newGlyph("dotbelowcomb")
         dot.unicodes = [0x0323]
-        # Dot above has a matching weight; relocate it below the baseline.
-        _append_component(dot, "dotaccentcomb", 0, -1650)
+        # The dot's height changes substantially across weights. Scale and
+        # position it relative to the *actual* bounds in this master so even
+        # Black cannot extend below the shared Windows descent.
+        x_min, y_min, x_max, y_max = _bounds(font, "dotaccentcomb")
+        limit = min(400, font.info.openTypeOS2WinDescent - 90)
+        scale = min(1, limit / (y_max - y_min))
+        x = 236 - scale * (x_min + x_max) / 2
+        y = -75 - scale * y_max
+        _append_component(dot, "dotaccentcomb", x, y, scale)
         dot.anchors.append(Anchor(x=236, y=0, name="_bottom"))
 
     if "horncomb" not in font:
