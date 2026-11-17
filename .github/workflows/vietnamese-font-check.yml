@@ -1,0 +1,87 @@
+name: Vietnamese font support
+
+on:
+  pull_request:
+    paths:
+      - "build.py"
+      - "tests/test_vietnamese.py"
+      - "tests/audit_vietnamese.py"
+      - ".github/workflows/vietnamese-font-check.yml"
+  push:
+    branches: [main]
+    paths:
+      - "build.py"
+      - "tests/test_vietnamese.py"
+      - "tests/audit_vietnamese.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  coverage-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install pinned build dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Audit original UFO glyph gaps before generating Vietnamese support
+        run: |
+          python tests/audit_vietnamese.py --output vietnamese-coverage.md
+          cat vietnamese-coverage.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload original-source Unicode gap report
+        uses: actions/upload-artifact@v4
+        with:
+          name: allo-vietnamese-coverage
+          path: vietnamese-coverage.md
+          if-no-files-found: error
+
+      - name: Validate Unicode mapping and accent bounds in UFOs
+        run: python -m unittest discover -s tests -p 'test_vietnamese.py' -v
+
+      - name: Compile variable and static fonts
+        run: python build.py
+
+      - name: Inspect compiled font cmaps
+        run: |
+          python - <<'PY'
+          from fontTools.ttLib import TTFont
+          import sys
+          sys.path.insert(0, 'tests')
+          from audit_vietnamese import REQUIRED
+
+          for path in (
+              "fonts/variable/AlloVariable.ttf",
+              "fonts/webfonts/AlloVariable.woff2",
+              "fonts/webfonts/AlloVariableFriendly.woff2",
+              "fonts/otf/Allo-Regular.otf",
+              "fonts/otf/Allo-Oblique.otf",
+          ):
+              font = TTFont(path)
+              missing = set(REQUIRED) - set(font.getBestCmap())
+              assert not missing, f"{path} missing: {sorted(hex(cp) for cp in missing)}"
+              print(f"{path}: {len(REQUIRED)} Vietnamese code points OK")
+          PY
+
+      - name: Upload font preview for visual QA
+        uses: actions/upload-artifact@v4
+        with:
+          name: allo-vietnamese-preview
+          path: |
+            fonts/variable/AlloVariable.ttf
+            fonts/webfonts/AlloVariable.woff2
+            fonts/webfonts/AlloVariableFriendly.woff2
+            fonts/otf/Allo-Regular.otf
+            fonts/otf/Allo-Oblique.otf
+          if-no-files-found: error
