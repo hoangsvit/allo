@@ -337,9 +337,16 @@ ZIP_README = '''
 def main():
     ds = DesignSpaceDocument.fromfile(ROOT / 'sources/Allo.designspace')
     ds.loadSourceFonts(ufoLib2.Font.open)
+    from vietnamese import extend_vietnamese
+
+    for source in ds.sources:
+        if source.font is not None:
+            extend_vietnamese(source.font)
     for instance in ds.instances:  # (their own names: else varLib names them from the STAT labels, "Display" for Display Regular)
         instance.localisedStyleName = {'en': instance.styleName, **instance.localisedStyleName}
     statics = {path.stem: ufoLib2.Font.open(path) for path in sorted((ROOT / 'sources/static').glob('*.ufo'))}
+    for font in statics.values():
+        extend_vietnamese(font)
     default = ds.findDefault().font.info
     win = (default.openTypeOS2WinAscent, default.openTypeOS2WinDescent)
     assert all((f.info.openTypeOS2WinAscent, f.info.openTypeOS2WinDescent) == win for f in [s.font for s in ds.sources] + list(statics.values())), 'Windows metrics differ between sources'
